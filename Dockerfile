@@ -20,6 +20,8 @@ COPY . .
 # Make the entrypoint script executable
 # We will create this script in the next steps to handle parameters
 COPY entrypoint.sh /app/entrypoint.sh
+# FORCE convert the file to Linux format (removes \r)
+RUN sed -i 's/\r$//' /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 # Set the entrypoint for the container. This script will be executed when the container starts.
 ENTRYPOINT ["/app/entrypoint.sh"]
