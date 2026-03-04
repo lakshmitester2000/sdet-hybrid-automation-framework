@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # Our Python test runner service
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: test-runner
+    command: pytest
+    networks:
+      - automation-network
+    # Environment variables will be used to construct the pytest command
+    environment:
+      - BROWSER=${BROWSER:-chrome} # Default to chrome if not set
+      - ENV=${ENV:-staging}         # Default to staging if not set
+      - TEST_TYPE=${TEST_TYPE:-ui}
+      - WORKERS=${WORKERS:-4}
+      - ALLURE_DIR=${ALLURE_DIR:-allure-results}
+      - SELENIUM_HUB_HOST=selenium-hub
+    # Mount a volume to get the Allure results back on the host machine
+    volumes:
+      - ./reports/allure-results:/app/allure-results
+    # This service depends on the Selenium Grid being ready
+    depends_on:
+      - chrome
+      - firefox
+  selenium-hub:
+    image: selenium/hub:4.15
+    container_name: selenium-hub  # This MUST match the hostname nodes use
+    networks:
+      - automation-network
+    ports:
+      - "4442:4442"
+      - "4443:4443"
+      - "4444:4444"
+  chrome:
+    image: selenium/node-chrome:4.15
+    networks:
+      - automation-network
+    shm_size: '2g' # Recommended to avoid browser crashes
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+  firefox:
+    image: selenium/node-firefox:4.15
+    networks:
+      - automation-network
+    shm_size: '2g'
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+networks:
+   automation-network:
+     driver: bridge

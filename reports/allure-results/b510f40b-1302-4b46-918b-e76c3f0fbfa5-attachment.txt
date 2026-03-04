@@ -1,0 +1,1 @@
+INFO     root:test_login.py:17 Testing login with username: admin
