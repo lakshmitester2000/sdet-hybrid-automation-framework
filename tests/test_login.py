@@ -1,6 +1,6 @@
 from pages.login_page import LoginPage
-from utilities.excel_utils import read_excel
-from utilities.logger import get_logger
+from utils.excel_utils import read_excel
+from utils.logger import get_logger
 import time
 import pytest
 
