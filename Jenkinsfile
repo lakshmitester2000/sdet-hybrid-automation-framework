@@ -17,8 +17,15 @@ pipeline {
         stage('Cleanup Environment') {
             steps {
                 script {
-                    // Ensures any hanging containers are stopped before we start
+                    // 1. Try standard down
                     bat "docker compose down"
+
+                    // 2. Force remove the specific hub container if it still exists
+                    // The '|| ver > nul' prevents the build from failing if the container isn't there
+                    bat "docker rm -f selenium-hub || ver > nul"
+
+                    // 3. Optional: Prune any leftover networks with the same name
+                    bat "docker network prune -f"
                 }
             }
         }

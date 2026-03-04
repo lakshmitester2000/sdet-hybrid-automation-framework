@@ -27,7 +27,6 @@ services:
       - firefox
   selenium-hub:
     image: selenium/hub:4.15
-    container_name: selenium-hub  # This MUST match the hostname nodes use
     networks:
       - automation-network
     ports:
