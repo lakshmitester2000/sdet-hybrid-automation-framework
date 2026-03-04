@@ -1,18 +1,37 @@
 import pytest
 from utils.api_client import APIClient
+from pages.login_page import LoginPage  # Ensure this import path is correct
 
 
 @pytest.fixture
 def api():
-    return APIClient("https://api.staging.example.com")
+    # Changed to a real, reachable mock API for demonstration
+    return APIClient("https://reqres.in/api")
 
 
-def test_user_can_view_profile(api, driver):
+def test_user_can_view_profile(api, driver, config):
     # 1. API Layer: Create a user via POST (Backend)
-    user_data = {"name": "John Doe", "email": "john@example.com"}
+    # Using reqres.in 'create' endpoint logic
+    user_data = {"name": "morpheus", "job": "leader"}
     response = api.post("/users", json=user_data)
-    assert response.status_code == 201
 
-    # 2. UI Layer: Verify user exists on the Dashboard (Frontend)
-    driver.get("https://staging.example.com/login")
-    # ... Selenium login logic here ...
+    # Assert 201 Created
+    assert response.status_code == 201
+    created_user = response.json()
+    print(f"User created via API with ID: {created_user['id']}")
+
+    # 2. UI Layer: Navigate and Login using your Page Object
+    login_page = LoginPage(driver)
+
+    # Use base_url from your config.yaml
+    login_page.load(config['base_url'])
+
+    # Using OrangeHRM credentials as per your config.yaml target
+    login_page.enter_username("Admin")
+    login_page.enter_password("admin123")
+    login_page.click_login()
+
+    # 3. Verification
+    assert "dashboard" in driver.current_url.lower()
+
+    

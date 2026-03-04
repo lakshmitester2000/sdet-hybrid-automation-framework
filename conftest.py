@@ -6,7 +6,10 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 import allure
 
-
+# In your test file:
+def test_example(driver, config):
+    # config['base_url'] pulls "https://opensource-demo.orangehrmlive.com/..."
+    driver.get(config['base_url'])
 
 @pytest.fixture(scope="session")
 def config():
