@@ -1,19 +1,41 @@
-import requests
-import allure
+import pytest
+from utils.api_client import APIClient
+from pages.login_page import LoginPage
 
-class APIClient:
-    def __init__(self, base_url):
-        self.base_url = base_url
-        self.session = requests.Session()
 
-    @allure.step("Sending GET request to {endpoint}")
-    def get(self, endpoint, params=None):
-        url = f"{self.base_url}{endpoint}"
-        response = self.session.get(url, params=params)
-        return response
+@pytest.fixture
+def api(config):
+    # Use the same base URL as your UI (e.g., https://opensource-demo.orangehrmlive.com)
+    # Strip the '/web/index.php...' part to get just the domain
+    base_domain = config['base_url'].split('/web')[0]
+    return APIClient(base_domain)
 
-    @allure.step("Sending POST request to {endpoint}")
-    def post(self, endpoint, data=None, json=None):
-        url = f"{self.base_url}{endpoint}"
-        response = self.session.post(url, data=data, json=json)
-        return response
+
+def test_user_can_view_profile(api, driver, config):
+    # 1. UI Layer: Login to get the 'Membership Card'
+    login_page = LoginPage(driver)
+    login_page.load(config['base_url'])
+    login_page.enter_username("Admin")
+    login_page.enter_password("admin123")
+    login_page.click_login()
+
+    # 2. Sync: Pass the browser's secret tokens to the API tool
+    api.sync_with_browser(driver)
+
+    # 3. API Layer: Create a real user in the OrangeHRM database
+    user_data = {
+        "username": "testuser2026",  # Change this every time you run!
+        "password": "Password123",
+        "status": True,
+        "userRoleId": 2,
+        "empNumber": 7  # Use a real ID from your PIM list
+    }
+
+    # The real OrangeHRM API endpoint for creating users
+    response = api.post("/web/index.php/api/v2/admin/users", json=user_data)
+
+    # 4. Verification
+    # OrangeHRM API usually returns 200 OK for a successful creation
+    assert response.status_code == 200
+    print("User successfully created via API!")
+    

@@ -34,4 +34,3 @@ def test_user_can_view_profile(api, driver, config):
     # 3. Verification
     assert "dashboard" in driver.current_url.lower()
 
-    
