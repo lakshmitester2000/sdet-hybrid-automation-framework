@@ -22,10 +22,11 @@ pipeline {
 
                     // 2. Force remove the specific hub container if it still exists
                     // The '|| ver > nul' prevents the build from failing if the container isn't there
-                    bat "docker rm -f selenium-hub || ver > nul"
+                    bat "docker rm -f selenium-hub test-runner || ver > nul"
 
                     // 3. Optional: Prune any leftover networks with the same name
                     bat "docker network prune -f"
+                    bat "docker volume prune -f"
                 }
             }
         }
