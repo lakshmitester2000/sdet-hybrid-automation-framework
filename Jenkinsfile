@@ -52,7 +52,7 @@ pipeline {
         stage('Archive Reports') {
             steps {
                 // IMPORTANT: Ensure 'allure-results' matches the folder name created by pytest in your project
-                allure includeProperties: false, results: [[path: 'allure-results']]
+                allure includeProperties: false, results: [[path: 'reports/allure-results']]
             }
         }
     }
