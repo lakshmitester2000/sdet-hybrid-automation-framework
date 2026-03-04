@@ -1,5 +1,5 @@
 import pytest
-from utils.api_client import APIClient
+
 from pages.login_page import LoginPage
 
 
@@ -38,4 +38,3 @@ def test_user_can_view_profile(api, driver, config):
     # OrangeHRM API usually returns 200 OK for a successful creation
     assert response.status_code == 200
     print("User successfully created via API!")
-    
