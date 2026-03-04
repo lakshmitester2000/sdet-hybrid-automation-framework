@@ -1,15 +1,18 @@
 pipeline {
     agent any
 
+    // ADDED: This tells Jenkins to use the 'allure' tool you configured in Global Tool Configuration
+    tools {
+        allure 'allure'
+    }
+
     environment {
-        // Define your Docker image name
         DOCKER_IMAGE = "my-selenium-tests"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // This pulls the code from your remote repo
                 checkout scm
             }
         }
@@ -17,14 +20,8 @@ pipeline {
         stage('Cleanup Environment') {
             steps {
                 script {
-                    // 1. Try standard down
                     bat "docker compose down"
-
-                    // 2. Force remove the specific hub container if it still exists
-                    // The '|| ver > nul' prevents the build from failing if the container isn't there
                     bat "docker rm -f selenium-hub test-runner || ver > nul"
-
-                    // 3. Optional: Prune any leftover networks with the same name
                     bat "docker network prune -f"
                     bat "docker volume prune -f"
                 }
@@ -34,7 +31,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // 'bat' is the Windows equivalent of 'sh'
                     bat "docker compose build tests"
                 }
             }
@@ -44,11 +40,9 @@ pipeline {
             steps {
                 script {
                     try {
-                        // Run the grid and the tests
-                        // --abort-on-container-exit stops the grid when tests finish
+                        // The exit code from the 'tests' container will determine if this stage passes or fails
                         bat "docker compose up --abort-on-container-exit --exit-code-from tests"
                     } finally {
-                        // Always shut down the grid to free up RAM/CPU
                         bat "docker compose down"
                     }
                 }
@@ -57,9 +51,17 @@ pipeline {
 
         stage('Archive Reports') {
             steps {
-                // This saves your Allure results inside Jenkins
-                // Ensure the path matches where your code saves the JSON results
-                allure includeProperties: false, results: [[path: 'reports/allure-results']]
+                // IMPORTANT: Ensure 'allure-results' matches the folder name created by pytest in your project
+                allure includeProperties: false, results: [[path: 'allure-results']]
+            }
+        }
+    }
+
+    // Optional: Keep your workspace clean after every run
+    post {
+        always {
+            script {
+                bat "docker image prune -f"
             }
         }
     }
