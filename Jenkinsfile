@@ -14,11 +14,20 @@ pipeline {
             }
         }
 
+        stage('Cleanup Environment') {
+            steps {
+                script {
+                    // Ensures any hanging containers are stopped before we start
+                    bat "docker compose down"
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Rebuilds the test-runner image
-                    sh "docker compose build tests"
+                    // 'bat' is the Windows equivalent of 'sh'
+                    bat "docker compose build tests"
                 }
             }
         }
@@ -28,10 +37,11 @@ pipeline {
                 script {
                     try {
                         // Run the grid and the tests
-                        sh "docker compose up --abort-on-container-exit --exit-code-from tests"
+                        // --abort-on-container-exit stops the grid when tests finish
+                        bat "docker compose up --abort-on-container-exit --exit-code-from tests"
                     } finally {
-                        // Always shut down the grid, even if tests fail
-                        sh "docker compose down"
+                        // Always shut down the grid to free up RAM/CPU
+                        bat "docker compose down"
                     }
                 }
             }
@@ -40,6 +50,7 @@ pipeline {
         stage('Archive Reports') {
             steps {
                 // This saves your Allure results inside Jenkins
+                // Ensure the path matches where your code saves the JSON results
                 allure includeProperties: false, results: [[path: 'reports/allure-results']]
             }
         }
