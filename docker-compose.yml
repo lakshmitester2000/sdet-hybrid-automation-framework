@@ -20,7 +20,7 @@ services:
       - SELENIUM_HUB_HOST=selenium-hub
     # Mount a volume to get the Allure results back on the host machine
     volumes:
-      - ./reports/allure-results:/app/allure-results
+      - ./allure-results:/app/allure-results
     # This service depends on the Selenium Grid being ready
     depends_on:
       - chrome
